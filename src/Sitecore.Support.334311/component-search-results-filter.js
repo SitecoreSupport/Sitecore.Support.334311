@@ -299,7 +299,7 @@
                     if (values.length > 1) {
                         for (var i = 0, l = values.length; i < l; i++) {
                             facetValue = inst.$el.find("[data-facetvalue]").filter(function () {
-                                return $(this).attr('data-facetvalue').toLowerCase() === values[i];
+                                return decodeURIComponent($(this).attr('data-facetvalue').toLowerCase()) === values[i];
                             });
                             if (val === facetValue[0]) {
                                 $(val).addClass('active-facet');

@@ -1,4 +1,4 @@
-﻿XA.component.search.facet.resultsfilter = (function ($, document) {
+XA.component.search.facet.resultsfilter = (function ($, document) {
 
     var api = {},
         urlHelperModel,
@@ -9,25 +9,25 @@
     var FacetResultsFilterModel = XA.component.search.baseModel.extend({
         defaults: {
             template: "<div class='facet-search-filter'><% " +
-                "_.forEach(facet.Values, function(value){" +
-                "%><p class='facet-value' data-facetValue='<%= value.Name !== '' ? encodeURI(value.Name) : '_empty_' %>'>" +
-                "<span><%= value.Name !== '' ? value.Name : emptyText %> " +
-                "<span class='facet-count'>(<%= value.Count %>)</span>" +
-                "</span>" +
-                "</p><%" +
-                " }); %>" +
-                "</div>",
+                            "_.forEach(facet.Values, function(value){" +
+                                "%><p class='facet-value' data-facetValue='<%= value.Name !== '' ? escape(value.Name) : '_empty_' %>'>" +
+                                    "<span><%= value.Name !== '' ? value.Name : emptyText %> " +
+                                        "<span class='facet-count'>(<%= value.Count %>)</span>" +
+                                    "</span>" +
+                                "</p><%" +
+                            " }); %>" +
+                        "</div>",
 
             templateMulti: "<div class='facet-search-filter'><% " +
-                "_.forEach(facet.Values, function(value){" +
-                "%><p class='facet-value' data-facetValue='<%= value.Name !== '' ? encodeURI(value.Name) : '_empty_' %>'>" +
-                "<input type='checkbox' name='facetValue' />" +
-                "<label for='facetName'><%= value.Name !== '' ? value.Name : emptyText %> " +
-                "<span class='facet-count' data-facetCount='<%= value.Count %>'>(<%= value.Count %>)</span>" +
-                "</label>" +
-                "</p><%" +
-                " }); %>" +
-                "</div>",
+                            "_.forEach(facet.Values, function(value){" +
+                                "%><p class='facet-value' data-facetValue='<%= value.Name !== '' ? escape(value.Name) : '_empty_' %>'>" +
+                                    "<input type='checkbox' name='facetValue' />" +
+                                    "<label for='facetName'><%= value.Name !== '' ? value.Name : emptyText %> " +
+                                        "<span class='facet-count' data-facetCount='<%= value.Count %>'>(<%= value.Count %>)</span>" +
+                                    "</label>" +
+                                    "</p><%" +
+                            " }); %>" +
+                        "</div>",
             dataProperties: {},
             blockNextRequest: false,
             resultData: {},
@@ -44,9 +44,9 @@
             //event after change of hash
             XA.component.search.vent.on("hashChanged", this.updateComponent.bind(this));
 
-            this.set({ facetArray: [] });
+            this.set({facetArray: []});
         },
-        toggleBlockRequests: function () {
+        toggleBlockRequests : function () {
             var state = this.get("blockNextRequest");
             this.set(this.get("blockNextRequest"), !state);
         },
@@ -79,16 +79,16 @@
                 var values = valuesString.split(','),
                     array = this.get('facetArray');
                 for (var i = 0; i < values.length; i++) {
-                    array.push(values[i]);
+                    array.push(decodeURIComponent(values[i]));
                 }
-                this.set({ facetArray: _.unique(array) });
+                this.set({facetArray: _.unique(array)});
             }
         },
         updateComponent: function (hash) {
             var sig = this.get("sig");
             for (i = 0; i < sig.length; i++) {
                 if (!hash.hasOwnProperty(sig[i])) {
-                    this.set({ facetArray: [] });
+                    this.set({facetArray: []});
                 } else {
                     this.updateFacetArray(hash[sig[i]]);
                 }
@@ -100,7 +100,7 @@
     });
 
     var FacetResultsFilterView = XA.component.search.baseView.extend({
-        initialize: function () {
+        initialize : function () {
             var dataProperties = this.$el.data(),
                 hash = queryModel.parseHashParameters(window.location.hash),
                 properties = dataProperties.properties,
@@ -112,9 +112,9 @@
                 dataProperties.properties.searchResultsSignature = "";
             }
 
-            signatures = this.translateSignatures(properties.searchResultsSignature, properties.f);
+            signatures = this.translateSignatures(properties.searchResultsSignature, properties.f.toLowerCase());
 
-            this.model.set({ dataProperties: properties });
+            this.model.set({dataProperties: properties});
             this.model.set("sig", signatures);
 
             for (i = 0; i < signatures.length; i++) {
@@ -126,37 +126,38 @@
 
             this.model.on("change", this.render, this);
         },
-        events: {
-            'click .facet-value': 'updateFacet',
-            'click .filterButton': 'updateFacet',
-            'click .clear-filter': 'removeFacet',
-            'click .bottom-remove-filter > button': 'removeFacet'
+        events : {
+            'click .facet-value' : 'updateFacet',
+            'click .filterButton' : 'updateFacet',
+            'click .clear-filter' : 'removeFacet',
+            'click .bottom-remove-filter > button' : 'removeFacet'
         },
-        updateFacet: function (param) {
+        updateFacet : function(param) {
             var currentFacet = $(param.currentTarget),
                 facetArray = this.model.get('facetArray'),
                 properties = this.model.get('dataProperties'),
                 facetClose = this.$el.find('.facet-heading > span'),
                 facetGroup = currentFacet.parents('.component-content').find('.facet-search-filter'),
                 facetName = properties.f.toLowerCase(),
-                facetDataValue = currentFacet.data('facetvalue'),
-                facetValue = typeof facetDataValue !== "undefined" ? decodeURIComponent(facetDataValue) : facetDataValue,
+                facetValue = currentFacet.data('facetvalue'),
                 sig = this.model.get('sig'),
                 index,
                 hash = {},
                 i;
 
+				
             if (properties.multi) {
                 if (facetValue) {
                     if (currentFacet.is(':not(.active-facet)')) {
                         this.setActiveFacet(facetName, facetValue);
+						facetValue = decodeURIComponent(facetValue);
                         facetArray.push(facetValue);
                     } else {
                         currentFacet.removeClass('active-facet');
 
                         currentFacet.find('[type=checkbox]').prop('checked', false);
-                        currentFacet.find('[type=checkbox] + label:after').css({ 'background': '#fff' });
-
+                        currentFacet.find('[type=checkbox] + label:after').css({'background' : '#fff'});
+						facetValue=decodeURIComponent(facetValue);
                         index = facetArray.indexOf(facetValue);
                         if (index > -1) {
                             facetArray.splice(index, 1);
@@ -166,11 +167,11 @@
                             facetClose.removeClass('has-active-facet');
                         }
                     }
-                    this.model.set({ facetArray: facetArray });
+                    this.model.set({facetArray: facetArray});
                 }
 
                 //is there any better way to check what action start method?
-                if (currentFacet[0].type == "button") {
+                if(currentFacet[0].type == "button") {
                     for (i = 0; i < sig.length; i++) {
                         hash[sig[i]] = _.uniq(facetArray, function (item) {
                             return JSON.stringify(item);
@@ -190,7 +191,7 @@
             }
 
         },
-        removeFacet: function (evt) {
+        removeFacet : function(evt) {
             evt.preventDefault();
 
             var facets = this.$el,
@@ -202,18 +203,18 @@
 
             facetClose.removeClass('has-active-facet');
 
-            _.each(facetValues, function (single) {
+            _.each(facetValues, function(single) {
                 var $single = $(single);
-                if ($single.hasClass('active-facet')) {
+                if($single.hasClass('active-facet')) {
                     $single.removeClass('active-facet');
                     $single.find('[type=checkbox]').prop('checked', false);
-                    $single.find('[type=checkbox] + label:after').css({ 'background': '#fff' });
+                    $single.find('[type=checkbox] + label:after').css({'background' : '#fff'});
                 }
             });
 
-            this.model.set({ facetArray: [] });
+            this.model.set({facetArray: []});
         },
-        render: function () {
+        render: function(){
             var inst = this,
                 resultData = this.model.get("resultData"),
                 facetClose = this.$el.find('.facet-heading > span'),
@@ -262,13 +263,13 @@
             }
 
             //if no facet is selected remove previously highlighted cross icon (while back button)
-            if (this.model.get("facetArray").length === 0) {
+            if (this.model.get("facetArray").length === 0){
                 facetClose.removeClass('has-active-facet');
             } else {
                 facetClose.addClass('has-active-facet');
             }
         },
-        setActiveFacet: function (facetGroupName, facetValueName) {
+        setActiveFacet: function(facetGroupName, facetValueName) {
             var properties = this.model.get('dataProperties'),
                 facetChildren = this.$el.find('p[data-facetvalue]'),
                 facetClose = this.$el.find('.facet-heading > span'),
@@ -276,12 +277,10 @@
                 facetValue,
                 values;
 
-            facetValueName = facetValueName.toString().toLowerCase();
+            facetValueName = decodeURIComponent(facetValueName.toString().toLowerCase());
             facetValue = this.$el.find("[data-facetvalue]").filter(function () {
                 return decodeURIComponent($(this).attr("data-facetvalue").toLowerCase()) === facetValueName;
             });
-
-
             if (typeof (facetValueName) !== "undefined" && facetValueName !== null) {
                 values = facetValueName.split(',');
             } else {
@@ -289,12 +288,12 @@
             }
 
             if (values.length > 1) {
-                properties.multi = true;
+               properties.multi = true;
             }
 
             if (properties.multi) {
                 //multi selection facet search results
-                _.each(facetChildren, function (val) {
+                _.each(facetChildren, function(val) {
 
                     if (values.length > 1) {
                         for (var i = 0, l = values.length; i < l; i++) {
@@ -317,11 +316,11 @@
                 });
             } else {
                 //single selection facet search results filter allow only one facet type be selected
-                _.each(facetChildren, function (val) {
-                    if (val !== facetValue[0]) {
+                _.each(facetChildren, function(val) {
+                    if(val !== facetValue[0]) {
                         $(val).removeClass('active-facet');
                         $(val).find('[type=checkbox]').prop('checked', false);
-                        $(val).find('[type=checkbox] + label:after').css({ 'background': '#fff' });
+                        $(val).find('[type=checkbox] + label:after').css({'background' : '#fff'});
                     } else {
                         $(val).addClass('active-facet');
                     }
@@ -334,7 +333,7 @@
         handleThreshold: function (highlightThreshold) {
             var facets = this.$el.find('.facet-search-filter').children('p');
 
-            _.each(facets, function (single) {
+            _.each(facets, function(single) {
                 var $facet = $(single),
                     $facetCount = $facet.find('.facet-count'),
                     facetCount = $facetCount.data('facetcount');
@@ -346,8 +345,8 @@
         }
     });
 
-    api.init = function () {
-        if ($("body").hasClass("on-page-editor") || initialized) {
+    api.init = function() {
+        if($("body").hasClass("on-page-editor") || initialized){
             return;
         }
 
@@ -356,9 +355,9 @@
         urlHelperModel = XA.component.search.url;
 
         var facetResultsFilterList = $(".facet-single-selection-list");
-        _.each(facetResultsFilterList, function (elem) {
+        _.each(facetResultsFilterList, function(elem){
             var model = new FacetResultsFilterModel(),
-                view = new FacetResultsFilterView({ el: $(elem), model: model });
+                view = new FacetResultsFilterView({el: $(elem), model: model});
         });
 
         initialized = true;
@@ -368,7 +367,7 @@
         var facetList = $(".facet-single-selection-list"),
             result = [];
 
-        _.each(facetList, function (elem) {
+        _.each(facetList, function(elem){
             var properties = $(elem).data().properties,
                 signatures = properties.searchResultsSignature.split(','),
                 i;
@@ -378,7 +377,7 @@
                     signature: signatures[i] === null ? "" : signatures[i],
                     facetName: properties.f,
                     endpoint: properties.endpoint,
-                    s: properties.s,
+                    s : properties.s,
                     filterWithoutMe: !properties.collapseOnSelection
                 });
             }

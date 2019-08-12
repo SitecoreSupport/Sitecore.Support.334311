@@ -47,7 +47,7 @@
       <Private>False</Private>
     </Reference>
     <Reference Include="Sitecore.XA.Foundation.Common">
-      <HintPath>..\packages\SXA90.Sitecore.XA.Foundation.Common.1.8.0\lib\Sitecore.XA.Foundation.Common.dll</HintPath>
+      <HintPath>..\packages\SXA90.Sitecore.XA.Foundation.Common.1.7.1\lib\Sitecore.XA.Foundation.Common.dll</HintPath>
       <Private>False</Private>
     </Reference>
     <Reference Include="System" />
